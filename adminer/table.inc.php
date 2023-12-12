@@ -19,7 +19,7 @@ if ($fields) {
 	$adminer->tableStructurePrint($fields);
 }
 
-echo '<p class="links"><a href="' . h(ME) . 'create=' . urlencode($TABLE) . '">' . lang('Alter columns') . "</a>\n";
+echo '<p class="links"><a href="' . Navigation::alterTableColumns($TABLE) . '">' . lang('Alter columns') . "</a>\n";
 
 if (!is_view($table_status)) {
 	if (support("indexes")) {

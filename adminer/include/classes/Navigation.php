@@ -18,4 +18,8 @@ class Navigation {
     {
         return h(ME) . 'table=' . urlencode($tableName);
     }
+
+    public static function alterTableColumns($tableName) {
+        return h(ME) . 'create=' . urlencode($tableName);
+    }
 }
