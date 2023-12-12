@@ -120,6 +120,13 @@ if ($_POST && !process_fields($row["fields"]) && !$error) {
 }
 
 page_header(($TABLE != "" ? lang('Alter table') : lang('Create table')), $error, array("table" => $TABLE), h($TABLE));
+if ($TABLE != "") {
+	?>
+	<p>
+		<a href="<?php echo Navigation::showTableStructure($TABLE) ?>">Back</a>
+	</p>
+	<?php
+}
 
 if (!$_POST) {
 	$row = array(

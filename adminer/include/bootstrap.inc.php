@@ -1,4 +1,6 @@
 <?php
+include "../adminer/include/classes/Navigation.php";
+
 function adminer_errors($errno, $errstr) {
 	return !!preg_match('~^(Trying to access array offset on value of type null|Undefined array key)~', $errstr);
 }

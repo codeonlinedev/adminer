@@ -1051,12 +1051,13 @@ bodyLoad('<?php echo (is_object($connection) ? preg_replace('~^(\d\.?\d).*~s', '
 		foreach ($tables as $table => $status) {
 			$name = $this->tableName($status);
 			if ($name != "") {
-				echo '<li><a href="' . h(ME) . 'select=' . urlencode($table) . '"'
+				echo '<li><a href="' . Navigation::selectTableData($table) . '"'
 					. bold($_GET["select"] == $table || $_GET["edit"] == $table, "select")
 					. " title='" . lang('Select data') . "'>" . lang('select') . "</a> "
 				;
+
 				echo (support("table") || support("indexes")
-					? '<a href="' . h(ME) . 'table=' . urlencode($table) . '"'
+					? '<a href="' . Navigation::showTableStructure($table) . '"'
 						. bold(in_array($table, array($_GET["table"], $_GET["create"], $_GET["indexes"], $_GET["foreign"], $_GET["trigger"])), (is_view($status) ? "view" : "structure"))
 						. " title='" . lang('Show structure') . "'>$name</a>"
 					: "<span>$name</span>"
