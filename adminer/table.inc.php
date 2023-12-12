@@ -19,6 +19,8 @@ if ($fields) {
 	$adminer->tableStructurePrint($fields);
 }
 
+echo '<p class="links"><a href="' . h(ME) . 'create=' . urlencode($TABLE) . '">' . lang('Alter columns') . "</a>\n";
+
 if (!is_view($table_status)) {
 	if (support("indexes")) {
 		echo "<h3 id='indexes'>" . lang('Indexes') . "</h3>\n";
