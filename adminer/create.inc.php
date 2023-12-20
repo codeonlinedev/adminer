@@ -12,9 +12,15 @@ foreach ($referencable_primary as $table_name => $field) {
 }
 
 $orig_fields = array();
+$origPrimaryKeyFields = array();
 $table_status = array();
 if ($TABLE != "") {
 	$orig_fields = fields($TABLE);
+	foreach ($orig_fields as $field_name => $field_info) {
+		if ($field_info["primary"]) {
+			$origPrimaryKeyFields[] = $field_name;
+		}
+	}
 	$table_status = table_status($TABLE);
 	if (!$table_status) {
 		$error = lang('No tables.');
@@ -38,11 +44,15 @@ if ($_POST && !process_fields($row["fields"]) && !$error) {
 		$fields = array();
 		$all_fields = array();
 		$use_all_fields = false;
+		$newPrimaryKeyFields = array();
 		$foreign = array();
 		$orig_field = reset($orig_fields);
 		$after = " FIRST";
 
 		foreach ($row["fields"] as $key => $field) {
+			if ($field["primary"]) {
+				$newPrimaryKeyFields[] = $field["field"];
+			}
 			$foreign_key = $foreign_keys[$field["type"]];
 			$type_field = ($foreign_key !== null ? $referencable_primary[$foreign_key] : $field); //! can collide with user defined type
 			if ($field["field"] != "") {
@@ -105,6 +115,29 @@ if ($_POST && !process_fields($row["fields"]) && !$error) {
 		}
 		$name = trim($row["name"]);
 
+		// COMPARE/DIFF $origPrimaryKeyFields and $newPrimaryKeyFields
+		$origPrimaryKeyFields = array_unique($origPrimaryKeyFields);
+		$newPrimaryKeyFields = array_unique($newPrimaryKeyFields);
+		$array_equal = function($a, $b) {
+			// https://stackoverflow.com/a/6922213/13680015
+			return (
+				is_array($a) 
+				&& is_array($b) 
+				&& count($a) == count($b) 
+				&& array_diff($a, $b) === array_diff($b, $a)
+		   );
+		};
+
+		$needDropPrimaryKey = (count($origPrimaryKeyFields) > 0);
+		$needAddPrimaryKey = (count($newPrimaryKeyFields) > 0);
+		if ($needDropPrimaryKey && $needAddPrimaryKey /* == need change primary key => check if we really need to change */) {
+			if ($array_equal($origPrimaryKeyFields, $newPrimaryKeyFields)) {
+				// No need to change
+				$needDropPrimaryKey = $needAddPrimaryKey = false;
+			}
+		}
+		$primaryKeyDiff = compact('needAddPrimaryKey', 'needDropPrimaryKey', 'newPrimaryKeyFields');
+
 		queries_redirect(ME . (support("table") ? "table=" : "select=") . urlencode($name), $message, alter_table(
 			$TABLE,
 			$name,
@@ -114,7 +147,8 @@ if ($_POST && !process_fields($row["fields"]) && !$error) {
 			($row["Engine"] && $row["Engine"] != $table_status["Engine"] ? $row["Engine"] : ""),
 			($row["Collation"] && $row["Collation"] != $table_status["Collation"] ? $row["Collation"] : ""),
 			($row["Auto_increment"] != "" ? number($row["Auto_increment"]) : ""),
-			$partitioning
+			$partitioning,
+			$primaryKeyDiff
 		));
 	}
 }

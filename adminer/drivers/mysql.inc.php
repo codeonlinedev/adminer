@@ -723,9 +723,10 @@ if (!defined("DRIVER")) {
 	* @param string
 	* @param string number
 	* @param string
+	* @param array primaryKeyDiff: array($needDropPrimaryKey, $needAddPrimaryKey, $newPrimaryKeyFields)
 	* @return bool
 	*/
-	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning) {
+	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning, $primaryKeyDiff) {
 		$alter = array();
 		foreach ($fields as $field) {
 			$alter[] = ($field[1]
@@ -740,7 +741,18 @@ if (!defined("DRIVER")) {
 			. ($auto_increment != "" ? " AUTO_INCREMENT=$auto_increment" : "")
 		;
 		if ($table == "") {
+			// In case of CREATING table
+			if ($primaryKeyDiff["needAddPrimaryKey"]) {
+				$alter[] = "PRIMARY KEY (" . implode(", ", $primaryKeyDiff["newPrimaryKeyFields"]) . ")";
+			}
 			return queries("CREATE TABLE " . table($name) . " (\n" . implode(",\n", $alter) . "\n)$status$partitioning");
+		}
+		// From now on is the case of ALTERING table
+		if ($primaryKeyDiff["needDropPrimaryKey"]) {
+			$alter[] = "DROP PRIMARY KEY";
+		}
+		if ($primaryKeyDiff["needAddPrimaryKey"]) {
+			$alter[] = "ADD PRIMARY KEY (" . implode(", ", $primaryKeyDiff["newPrimaryKeyFields"]) . ")";
 		}
 		if ($table != $name) {
 			$alter[] = "RENAME TO " . table($name);

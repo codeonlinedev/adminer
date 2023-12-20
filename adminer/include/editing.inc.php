@@ -272,8 +272,48 @@ function edit_fields($fields, $collations, $type = "TABLE", $foreign_keys = arra
 	$comment_class = (($_POST ? $_POST["comments"] : adminer_setting("comments")) ? "" : " class='hidden'");
 	?>
 <thead><tr>
+<!--
+I've had a hard time trying to figure out what the following code does,
+and so might you.
+
+So here are some clues:
+
+1. <th>, <tr> and <td> HTML tags are not required to have their
+	corresponding closing tags (e.g. </th>).
+
+2. The code below (written by original author(s)) uses <th> for
+	table headers in **bold**, and <td> for ALSO TABLE HEADERS,
+	but not in bold (!)
+
+	So the structure is basically
+		<table>
+			<thead>
+				<tr>
+					<th>Column name
+					<td>Type
+					<td>Length
+					<td>Options
+					<td>NULL
+					<td>AI
+					...
+				
+			</thead>
+			...
+		</table>
+
+	View the page in browser to better understand what I've said.
+
+3. While viewing the page in browser: The 'Default value' column is
+	hidden unless you check the 'Default values' checkbox under the
+	table.
+-->
 <?php if ($type == "PROCEDURE") { ?><td><?php } ?>
 <th id="label-name"><?php echo ($type == "TABLE" ? lang('Column name') : lang('Parameter name')); ?>
+<?php if ($type == "TABLE") { ?>
+<td id="label-primary-key"><?php
+	echo lang('Primary Key'); /* lang('PRIMARY') and lang('Primary Key') seems unavailable in multiple languages */
+?></td>
+<?php } ?>
 <td id="label-type"><?php echo lang('Type'); ?><textarea id="enum-edit" rows="4" cols="12" wrap="off" style="display: none;"></textarea><?php echo script("qs('#enum-edit').onblur = editingLengthBlur;"); ?>
 <td id="label-length"><?php echo lang('Length'); ?>
 <td><?php echo lang('Options'); /* no label required, options have their own label */ ?>
@@ -299,9 +339,22 @@ function edit_fields($fields, $collations, $type = "TABLE", $foreign_keys = arra
 		$orig = $field[($_POST ? "orig" : "field")];
 		$display = (isset($_POST["add"][$i-1]) || (isset($field["field"]) && !$_POST["drop_col"][$i])) && (support("drop_col") || $orig == "");
 		?>
+<?php /*
+	LEGEND
+
+	$field["field"]: The field/column name
+
+*/ ?>
 <tr<?php echo ($display ? "" : " style='display: none;'"); ?>>
 <?php echo ($type == "PROCEDURE" ? "<td>" . html_select("fields[$i][inout]", explode("|", $inout), $field["inout"]) : ""); ?>
 <th><?php if ($display) { ?><input name="fields[<?php echo $i; ?>][field]" value="<?php echo h($field["field"]); ?>" data-maxlength="64" autocapitalize="off" aria-labelledby="label-name"><?php } ?>
+<?php if ($type == "TABLE") { ?>
+<td><?php
+/* Whether this column is in the primary key */
+echo checkbox("fields[$i][primary]", 1, $field["primary"], "", "", "", "label-default");
+}
+?>
+</td>
 <input type="hidden" name="fields[<?php echo $i; ?>][orig]" value="<?php echo h($orig); ?>"><?php edit_type("fields[$i]", $field, $collations, $foreign_keys); ?>
 <?php if ($type == "TABLE") { ?>
 <td><?php echo checkbox("fields[$i][null]", 1, $field["null"], "", "", "block", "label-null"); ?>
